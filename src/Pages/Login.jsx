@@ -7,7 +7,7 @@ const BASE_URL = 'http://localhost:4000/api/v1';
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // 👈 for success message
+  const location = useLocation();
   const { dispatch } = useContext(AuthContext);
   
   // Form state
@@ -21,7 +21,7 @@ const Login = () => {
   const [serverError, setServerError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Get optional success message from redirect (e.g. after register)
+  // Get optional success message from redirect
   const successMessage = location.state?.successMessage || null;
 
   const handleChange = (e) => {
@@ -34,7 +34,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.identifier || !formData.password) {
+    if (!formData.identifier.trim() || !formData.password.trim()) {
       setServerError('Please enter both username/email and password');
       return;
     }
@@ -43,57 +43,107 @@ const Login = () => {
       setLoading(true);
       dispatch({ type: 'LOGIN_START' });
 
+      console.log('Attempting login with:', { 
+        identifier: formData.identifier,
+        url: `${BASE_URL}/auth/login`
+      });
+
       const response = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          identifier: formData.identifier,
+          identifier: formData.identifier.trim(),
           password: formData.password
         }),
         credentials: 'include'
       });
 
+      console.log('Login response status:', response.status);
+      
       const data = await response.json();
+      console.log('Login response data:', data);
 
       if (!response.ok) {
         let errorMessage;
-        if (response.status === 401 || response.status === 403) {
-          errorMessage = 'Invalid username/email or password';
-        } else if (response.status === 404) {
-          errorMessage = 'User not found. Please check your credentials or register';
-        } else {
-          errorMessage = data.message || 'Login failed';
+        
+        switch (response.status) {
+          case 400:
+            errorMessage = data.message || 'Invalid request. Please check your input.';
+            break;
+          case 401:
+            errorMessage = 'Invalid credentials. Please check your username/email and password.';
+            break;
+          case 403:
+            errorMessage = 'Access denied. Please verify your account.';
+            break;
+          case 404:
+            errorMessage = 'User not found. Please check your credentials or create an account.';
+            break;
+          case 422:
+            errorMessage = data.message || 'Validation error. Please check your input.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = data.message || `Login failed (${response.status})`;
         }
+        
         throw new Error(errorMessage);
       }
 
-      const userFromServer = data.data || {};
+      // Handle different possible response structures
+      let userData;
+      
+      if (data.success === false) {
+        throw new Error(data.message || 'Login failed');
+      }
 
-      const userData = {
-        token: data.token,
-        username: userFromServer.username || data.username,
-        userId: userFromServer._id || data.userId || data.id,
-        role: data.role || userFromServer.role
-      };
+      // Extract user data from various possible response structures
+      const token = data.token;
+userData = {
+  token,
+  username: data.username || data.data?.username,
+  userId: data.userId || data.data?._id, // This is the main fix
+  role: data.role || data.data?.role || 'user',
+  email: data.email || data.data?.email
+};
 
-      if (!userData.username || !userData.userId) {
-        throw new Error('Invalid response from server. Missing user data.');
+      console.log('Processed user data:', userData);
+
+      // Validate essential data
+      if (!userData.username && !userData.email) {
+        throw new Error('Invalid response: Missing username or email');
+      }
+
+      if (!userData.userId) {
+        throw new Error('Invalid response: Missing user ID');
       }
 
       dispatch({ type: 'LOGIN_SUCCESS', payload: userData });
 
-      const redirectPath = userData.role === 'admin' ? '/admin/dashboard' : '/dashboard';
-      navigate(redirectPath);
+      // Store token for future requests
+      localStorage.setItem('authToken', userData.token);
+      localStorage.setItem('userData', JSON.stringify(userData));
+
+      console.log('Login successful, redirecting...');
+      
+      const redirectPath = userData.role === 'admin' ? '/admin/home' : '/home';
+      navigate(redirectPath, { replace: true });
 
     } catch (err) {
       console.error('Login error:', err);
+      
+      const errorMessage = err.message || 'Something went wrong during login';
+      
       dispatch({
         type: 'LOGIN_FAILURE',
-        payload: err.message || 'Something went wrong during login'
+        payload: errorMessage
       });
-      setServerError(err.message);
+      
+      setServerError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -102,6 +152,17 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(prev => !prev);
   };
+
+  // Clear success message after a delay
+  React.useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        // Clear the success message from location state
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, navigate, location.pathname]);
 
   return (
     <div className="login-container">
@@ -116,7 +177,7 @@ const Login = () => {
       {serverError && (
         <div className="error-alert">
           {serverError}
-          {serverError.includes('register') && (
+          {(serverError.includes('not found') || serverError.includes('create an account')) && (
             <div className="register-suggestion">
               <Link to="/register">Create Account</Link>
             </div>
@@ -135,6 +196,7 @@ const Login = () => {
             onChange={handleChange}
             required
             autoComplete="username"
+            placeholder="Enter your username or email"
           />
         </div>
 
@@ -149,11 +211,13 @@ const Login = () => {
               onChange={handleChange}
               required
               autoComplete="current-password"
+              placeholder="Enter your password"
             />
             <button
               type="button"
               className="toggle-password"
               onClick={togglePasswordVisibility}
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? "Hide" : "Show"}
             </button>

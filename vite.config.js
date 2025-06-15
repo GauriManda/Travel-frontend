@@ -11,11 +11,15 @@ export default defineConfig({
           "https://travel-backend-9hrb4ffzg-gauri-mandas-projects.vercel.app",
         changeOrigin: true,
         secure: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        // REMOVED: rewrite rule that was stripping /api
+        // The backend expects /api in the path, so don't remove it
+        configure: (proxy, options) => {
+          proxy.on("error", (err, req, res) => {
+            console.log("Proxy error:", err);
+          });
+          proxy.on("proxyReq", (proxyReq, req, res) => {
+            console.log("Proxying request to:", options.target + req.url);
+          });
         },
       },
     },

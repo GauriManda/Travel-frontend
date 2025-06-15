@@ -83,27 +83,30 @@ const TourDetails = () => {
     }
   }, [id]);
 
-  const fetchReviews = async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/reviews/tour/${id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-      
-      const data = await res.json();
-      
-      if (res.ok) {
-        setLocalReviews(data.data || []);
-      } else {
-        console.error("Failed to fetch reviews:", data.message);
+const fetchReviews = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/reviews/tour/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
       }
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok) {
+      // Fix: Access the reviews array specifically
+      setLocalReviews(data.data.reviews || []);
+      console.log("Reviews fetched:", data.data.reviews); // Debug log
+    } else {
+      console.error("Failed to fetch reviews:", data.message);
+      setLocalReviews([]); // Set empty array on error
     }
-  };
-
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    setLocalReviews([]); // Set empty array on error
+  }
+};
   const handleMembersChange = (change) => {
     setMembers((prev) => Math.max(1, Math.min(prev + change, 10)));
   };

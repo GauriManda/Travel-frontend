@@ -1,107 +1,75 @@
-import { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { useState, useEffect } from "react";
 
-const useFetch = (url, requiresAuth = false) => {
+const useSimpleFetch = (url) => {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const { hasUser, token } = useContext(AuthContext);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
+    if (!url) return;
 
     const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
-        console.log("useFetch - URL:", url);
-        console.log("useFetch - requiresAuth:", requiresAuth);
-        console.log("useFetch - hasUser:", hasUser);
-        console.log("useFetch - token:", token ? "Token exists" : "No token");
+        setLoading(true);
+        setError(null);
 
-        if (requiresAuth && !hasUser) {
-          setData(null);
-          setError("Authentication required");
-          setLoading(false);
-          return;
-        }
-
-        if (!url || typeof url !== "string") {
-          throw new Error(`Invalid URL: ${url}`);
-        }
-
-        const headers = {
-          "Content-Type": "application/json",
-        };
-
-        // Only add auth header if we have a token AND either requiresAuth is true OR we have a user
-        if (token && (requiresAuth || hasUser)) {
-          headers["Authorization"] = `Bearer ${token}`;
-          console.log("Added Authorization header");
-        } else {
-          console.log("No Authorization header added");
-        }
-
-        console.log("Making request to:", url);
-        console.log("Headers:", headers);
-
-        const res = await fetch(url, {
-          headers,
-          signal,
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
-        console.log("Response status:", res.status);
-        console.log("Response ok:", res.ok);
-
-        if (!res.ok) {
-          let errorMessage = `HTTP error! Status: ${res.status}`;
-          try {
-            const errorData = await res.json();
-            console.log("Error response data:", errorData);
-            errorMessage = errorData.message || errorData.error || errorMessage;
-          } catch (parseError) {
-            console.log("Could not parse error response:", parseError);
-          }
-          throw new Error(errorMessage);
-        }
-
-        const result = await res.json();
-        console.log("🔍 Full result from API:", result);
-
-        if (!signal.aborted) {
-          // Try to handle different response structures
-          if (result.data) {
-            setData(result.data);
-          } else if (result.tours) {
-            setData(result.tours);
-          } else if (Array.isArray(result)) {
-            setData(result);
+        if (!response.ok) {
+          // More specific error handling
+          if (response.status === 401) {
+            throw new Error(
+              "Authentication required. Please log in to view featured tours."
+            );
+          } else if (response.status === 403) {
+            throw new Error(
+              "Access forbidden. You don't have permission to view this content."
+            );
+          } else if (response.status === 404) {
+            throw new Error(
+              "Tours not found. The requested resource does not exist."
+            );
+          } else if (response.status >= 500) {
+            throw new Error("Server error. Please try again later.");
           } else {
-            setData(result);
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
         }
+
+        const result = await response.json();
+
+        // Handle different response structures
+        let extractedData;
+        if (result.success === false) {
+          throw new Error(result.message || "Failed to fetch tours");
+        } else if (result.data !== undefined) {
+          extractedData = result.data;
+        } else if (result.tours !== undefined) {
+          extractedData = result.tours;
+        } else if (Array.isArray(result)) {
+          extractedData = result;
+        } else {
+          extractedData = result;
+        }
+
+        setData(extractedData);
       } catch (err) {
-        if (!signal.aborted) {
-          console.error("Fetch Error:", err);
-          setError(err.message || "An error occurred while fetching data");
-        }
+        console.error("Fetch error:", err);
+        setError(err.message);
       } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    if (url) {
-      fetchData();
-    }
-
-    return () => controller.abort();
-  }, [url, hasUser, token, requiresAuth]);
+    fetchData();
+  }, [url]); // Only depend on URL
 
   return { data, loading, error };
 };
 
-export default useFetch;
+export default useSimpleFetch;

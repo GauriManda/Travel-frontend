@@ -1,192 +1,146 @@
-import React, { createContext, useReducer, useEffect, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-const initialState = {
-  hasUser: false,
-  username: null,
-  userId: null,
-  token: null,
-  role: null,
-  loading: false,
-  error: null,
-};
+// Create the context once
+const AuthContext = createContext();
 
-// Create the context
-const AuthContext = createContext(initialState);
-
-// Reducer function to manage state changes
-const authReducer = (state, action) => {
-  switch (action.type) {
-    case 'LOGIN_START':
-      return {
-        ...state,
-        loading: true,
-        error: null,
-      };
-    case 'LOGIN_SUCCESS':
-      return {
-        ...state,
-        hasUser: true,
-        username: action.payload.username,
-        userId: action.payload.userId,
-        token: action.payload.token,
-        role: action.payload.role,
-        loading: false,
-        error: null,
-      };
-    case 'LOGIN_FAILURE':
-      return {
-        ...state,
-        hasUser: false,
-        username: null,
-        userId: null,
-        token: null,
-        role: null,
-        loading: false,
-        error: action.payload,
-      };
-    case 'REGISTER_START':
-      return {
-        ...state,
-        loading: true,
-        error: null,
-      };
-    case 'REGISTER_SUCCESS':
-      return {
-        ...state,
-        hasUser: true,
-        username: action.payload.username,
-        userId: action.payload.userId,
-        token: action.payload.token,
-        role: action.payload.role,
-        loading: false,
-        error: null,
-      };
-    case 'REGISTER_FAILURE':
-      return {
-        ...state,
-        hasUser: false,
-        username: null,
-        userId: null,
-        token: null,
-        role: null,
-        loading: false,
-        error: action.payload,
-      };
-    case 'LOGOUT':
-      return {
-        ...state,
-        hasUser: false,
-        username: null,
-        userId: null,
-        token: null,
-        role: null,
-        loading: false,
-        error: null,
-      };
-    case 'AUTH_LOADING':
-      return {
-        ...state,
-        loading: true,
-      };
-    case 'AUTH_ERROR':
-      return {
-        ...state,
-        loading: false,
-        error: action.payload,
-      };
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null,
-      };
-    default:
-      return state;
+// Check if token is expired
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp < Date.now() / 1000;
+  } catch {
+    return true;
   }
 };
 
-// Context provider component
-export const AuthContextProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
+// Auth Provider Component
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load user data from localStorage on app start
+  // Load user from localStorage on mount
   useEffect(() => {
-    try {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      if (userData && userData.username && userData.userId) {
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: {
-            username: userData.username,
-            userId: userData.userId,
-            token: userData.token,
-            role: userData.role,
-          },
-        });
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        if (!isTokenExpired(userData.token)) {
+          setUser(userData);
+        } else {
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        localStorage.removeItem('user');
+        setUser(null);
       }
-    } catch (error) {
-      console.error('Error loading user data from localStorage:', error);
-      localStorage.removeItem('user'); // Clear corrupted data
     }
+    setLoading(false);
   }, []);
 
-  // Save user to localStorage when state changes
+  // Save user to localStorage when user changes
   useEffect(() => {
-    if (state.hasUser && state.username && state.userId) {
-      const userData = {
-        username: state.username,
-        userId: state.userId,
-        token: state.token,
-        role: state.role,
-      };
-      localStorage.setItem('user', JSON.stringify(userData));
-    } else if (!state.hasUser) {
+    if (user) {
+      try {
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch (error) {
+        console.error('Error saving user data:', error);
+      }
+    } else {
       localStorage.removeItem('user');
     }
-  }, [state.hasUser, state.username, state.userId, state.token, state.role]);
+  }, [user]);
 
-  // Create user object for compatibility with components that expect a user object
-  const user = state.hasUser ? {
-    username: state.username,
-    userId: state.userId,
-    _id: state.userId, // Add _id alias for compatibility
-    email: state.username, // Assuming username might be email
-    token: state.token,
-    role: state.role
-  } : null;
+  // Login function
+  const login = useCallback((userData) => {
+    console.log('AuthContext: Logging in user:', userData);
+    setUser(userData);
+  }, []);
 
-  // Provide both individual properties AND user object for maximum compatibility
-  const contextValue = {
-    // Individual properties (for direct destructuring)
-    hasUser: state.hasUser,
-    username: state.username,
-    userId: state.userId,
-    token: state.token,
-    role: state.role,
-    loading: state.loading,
-    error: state.error,
+  // Logout function
+  const logout = useCallback(() => {
+    console.log('AuthContext: Logging out user');
+    setUser(null);
+  }, []);
+
+  // Dispatch function for components that expect reducer pattern
+  const dispatch = useCallback((action) => {
+    console.log('AuthContext: Dispatching action:', action);
     
-    // User object (for components that expect it)
-    user,
-    
-    // Actions
-    dispatch,
-    
-    // Helper methods
-    isLoggedIn: state.hasUser,
-    isLoading: state.loading,
-    
-    // For backward compatibility with simple setUser pattern
-    setUser: (userData) => {
-      if (userData) {
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: userData
-        });
-      } else {
-        dispatch({ type: 'LOGOUT' });
-      }
+    switch (action.type) {
+      case 'LOGIN_START':
+        setLoading(true);
+        break;
+        
+      case 'LOGIN_SUCCESS':
+        setLoading(false);
+        login(action.payload);
+        break;
+        
+      case 'LOGIN_FAILURE':
+        setLoading(false);
+        setUser(null);
+        break;
+        
+      case 'LOGOUT':
+        logout();
+        break;
+        
+      case 'REGISTER_START':
+        setLoading(true);
+        break;
+        
+      case 'REGISTER_SUCCESS':
+        setLoading(false);
+        login(action.payload);
+        break;
+        
+      case 'REGISTER_FAILURE':
+        setLoading(false);
+        break;
+        
+      default:
+        console.warn('Unknown action type:', action.type);
     }
+  }, [login, logout]);
+
+  // Get valid token function
+  const getValidToken = useCallback(() => {
+    if (!user?.token || isTokenExpired(user.token)) {
+      logout();
+      return null;
+    }
+    return user.token;
+  }, [user?.token, logout]);
+
+  // Context value
+  const contextValue = {
+    user,
+    login,
+    logout,
+    loading,
+    dispatch,
+    isLoggedIn: !!user,
+    getValidToken,
+    // Legacy support
+    hasUser: !!user,
+    username: user?.username,
+    userId: user?.userId || user?._id,
+    token: user?.token,
+    role: user?.role
   };
+
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('AuthContext: Current state:', {
+      hasUser: !!user,
+      loading,
+      userId: user?._id,
+      username: user?.username
+    });
+  }
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -195,14 +149,17 @@ export const AuthContextProvider = ({ children }) => {
   );
 };
 
-// Custom hook for using auth context
+// Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthContextProvider');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };
 
-// Export AuthContext for direct useContext usage
+// Export the context itself
 export { AuthContext };
+
+// Backward compatibility export
+export const AuthContextProvider = AuthProvider;

@@ -4,14 +4,32 @@ import { AuthContext } from '../context/AuthContext';
 import './Header.css';
 
 const Header = () => {
-  const { user, dispatch } = useContext(AuthContext);
+  const context = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Add error handling for context
+  if (!context) {
+    console.error('Header component must be used within AuthContext.Provider');
+    return <div>Loading...</div>;
+  }
+
+  const { user, logout } = context;
+
+  // Add error handling for logout function
+  if (!logout) {
+    console.error('logout function is not available in AuthContext');
+    return <div>Authentication Error</div>;
+  }
 
   // Memoize the logout handler to prevent unnecessary re-renders
   const handleLogout = useCallback(() => {
-    dispatch({ type: "LOGOUT" });
-    navigate('/');
-  }, [dispatch, navigate]);
+    try {
+      logout(); // Use the logout function from context
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }, [logout, navigate]);
 
   // Memoize username calculation
   const username = useMemo(() => {
@@ -24,10 +42,11 @@ const Header = () => {
       console.log("Header - User state changed:", {
         isLoggedIn: !!user,
         username: user?.username,
-        userId: user?._id
+        userId: user?._id,
+        hasLogout: typeof logout === 'function'
       });
     }
-  }, [user?._id, user?.username]); // Only log when actual user data changes
+  }, [user?._id, user?.username, logout]); // Add logout to dependencies
 
   return (
     <div className="header-container">
@@ -46,7 +65,7 @@ const Header = () => {
             <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Home</NavLink>
             <NavLink to="/about" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>About</NavLink>
             <NavLink to="/tours" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Tours</NavLink>
-            </div>
+          </div>
           
           <div className="auth-links">
             {user ? (
