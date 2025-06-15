@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
-import { AuthContextProvider } from './frontend/src/context/AuthContext'; // Updated path
-import Layout from "./frontend/src/Components/Layout";  
+import { AuthContextProvider } from "./context/AuthContext"
+import Layout from "./Components/Layout";  
 
 const MainLayout = () => {  
   return (
