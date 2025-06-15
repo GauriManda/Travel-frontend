@@ -17,6 +17,7 @@ const useFetch = (url, requiresAuth = false) => {
 
       try {
         console.log("useFetch - URL:", url);
+        console.log("useFetch - requiresAuth:", requiresAuth);
         console.log("useFetch - hasUser:", hasUser);
         console.log("useFetch - token:", token ? "Token exists" : "No token");
 
@@ -35,8 +36,12 @@ const useFetch = (url, requiresAuth = false) => {
           "Content-Type": "application/json",
         };
 
-        if (hasUser && token) {
+        // Only add auth header if we have a token AND either requiresAuth is true OR we have a user
+        if (token && (requiresAuth || hasUser)) {
           headers["Authorization"] = `Bearer ${token}`;
+          console.log("Added Authorization header");
+        } else {
+          console.log("No Authorization header added");
         }
 
         console.log("Making request to:", url);
@@ -47,20 +52,35 @@ const useFetch = (url, requiresAuth = false) => {
           signal,
         });
 
+        console.log("Response status:", res.status);
+        console.log("Response ok:", res.ok);
+
         if (!res.ok) {
           let errorMessage = `HTTP error! Status: ${res.status}`;
           try {
             const errorData = await res.json();
-            errorMessage = errorData.message || errorMessage;
-          } catch {}
+            console.log("Error response data:", errorData);
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch (parseError) {
+            console.log("Could not parse error response:", parseError);
+          }
           throw new Error(errorMessage);
         }
 
         const result = await res.json();
-        console.log("🔍 result from API:", result);
+        console.log("🔍 Full result from API:", result);
 
         if (!signal.aborted) {
-          setData(result.data); // ✅ adjust this if your API returns data inside another object (e.g., result.data.tours)
+          // Try to handle different response structures
+          if (result.data) {
+            setData(result.data);
+          } else if (result.tours) {
+            setData(result.tours);
+          } else if (Array.isArray(result)) {
+            setData(result);
+          } else {
+            setData(result);
+          }
         }
       } catch (err) {
         if (!signal.aborted) {
