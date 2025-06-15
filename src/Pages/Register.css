@@ -1,0 +1,125 @@
+/* Register.css */
+
+.register-container {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.register-container h2 {
+  margin: 0 0 24px;
+  text-align: center;
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #444;
+  font-size: 14px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #3a7fcf;
+}
+
+.btn-primary:disabled {
+  background-color: #a5c4ea;
+  cursor: not-allowed;
+}
+
+.error-alert {
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #fff1f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+  color: #f5222d;
+  font-size: 14px;
+}
+
+.login-suggestion {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.login-suggestion a {
+  display: inline-block;
+  padding: 6px 16px;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.login-suggestion a:hover {
+  background-color: #3a7fcf;
+  text-decoration: none;
+}
+
+.form-footer {
+  margin-top: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.form-footer a {
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.form-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .register-container {
+    max-width: 100%;
+    margin: 20px;
+    padding: 20px;
+  }
+}

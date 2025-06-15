@@ -1,0 +1,270 @@
+[
+    {
+      "id": 1,
+      "location": "Himachal Pradesh",
+      "title": "Hampta Pass Trek",
+      "price": 299,
+      "rating": 4.8,
+      "reviews": [],
+      "photo": "/Assets/image1.png",
+      "featured": true,
+      "desc": "A breathtaking crossover trek that takes you from the lush green valleys of Kullu to the barren landscapes of Lahaul, offering dramatic changes in scenery.",
+      "highlights": [
+        "Spectacular views of the Dhauladhar range",
+        "Camping at Chandratal Lake",
+        "Diverse landscapes from forests to high-altitude deserts"
+      ],
+      "duration": "5 days",
+      "difficulty": "Moderate",
+      "maxGroupSize": 15,
+      "distance": 42,
+      "address": "Hampta Pass, Manali",
+      "city": "Manali",
+      "itinerary": [
+        "Day 1: Arrive at Manali and acclimatize",
+        "Day 2: Drive to Jobra and trek to Chika (3,100m)",
+        "Day 3: Trek from Chika to Balu Ka Ghera (3,600m)",
+        "Day 4: Cross Hampta Pass (4,270m) and descend to Shea Goru",
+        "Day 5: Trek to Chatru and drive to Chandratal Lake and Manali"
+      ]
+    },
+    {
+      "id": 2,
+      "location": "Uttarakhand",
+      "title": "Valley of Flowers Trek",
+      "price": 329,
+      "rating": 4.9,
+      "reviews": [],
+      "photo": "/Assets/image2.png",
+      "featured": true,
+      "desc": "A UNESCO World Heritage site that comes alive with hundreds of alpine flowers during the monsoon season, set against the backdrop of majestic Himalayan peaks.",
+      "highlights": [
+        "Vibrant meadows with rare Himalayan flowers",
+        "Visit to Hemkund Sahib Gurudwara",
+        "Stunning views of Nanda Devi"
+      ],
+      "duration": "6 days",
+      "difficulty": "Moderate",
+      "maxGroupSize": 15,
+      "distance": 45,
+      "address": "Valley of Flowers, Ghangaria",
+      "city": "Joshimath",
+      "itinerary": [
+        "Day 1: Arrive at Joshimath from Haridwar",
+        "Day 2: Drive to Govindghat and trek to Ghangaria (3,050m)",
+        "Day 3: Explore Valley of Flowers National Park",
+        "Day 4: Trek to Hemkund Sahib (4,380m) and back to Ghangaria",
+        "Day 5: Trek back to Govindghat and drive to Joshimath",
+        "Day 6: Return to Haridwar"
+      ]
+    },
+    {
+      "id": 3,
+      "location": "Sikkim",
+      "title": "Goecha La Trek",
+      "price": 599,
+      "rating": 4.7,
+      "reviews": [],
+      "photo": "/Assets/image3.png",
+      "featured": false,
+      "desc": "A challenging but rewarding trek that offers the closest possible views of the magnificent Kanchenjunga, the third highest mountain in the world.",
+      "highlights": [
+        "Panoramic views of Kanchenjunga",
+        "Traverse through rhododendron forests",
+        "Experience unique Sikkimese culture"
+      ],
+      "duration": "11 days",
+      "difficulty": "Challenging",
+      "maxGroupSize": 12,
+      "distance": 90,
+      "address": "Goecha La, Yuksom",
+      "city": "Gangtok",
+      "itinerary": [
+        "Day 1: Arrive at Yuksom from Gangtok",
+        "Day 2: Trek from Yuksom to Sachen",
+        "Day 3: Trek from Sachen to Tshoka",
+        "Day 4: Trek from Tshoka to Dzongri",
+        "Day 5: Acclimatization day at Dzongri with excursion to Dzongri Top",
+        "Day 6: Trek from Dzongri to Thansing",
+        "Day 7: Trek from Thansing to Lamuney",
+        "Day 8: Early morning trek to Goecha La viewpoint and back to Kokchurang",
+        "Day 9: Trek from Kokchurang to Tshoka",
+        "Day 10: Trek from Tshoka to Yuksom",
+        "Day 11: Return to Gangtok"
+      ]
+    },
+    
+  
+    {
+      "id": 4,
+      "location": "Jammu & Kashmir",
+      "title": "Kashmir Great Lakes Trek",
+      "price": 449,
+      "rating": 4.9,
+      "reviews": [],
+      "photo": "/Assets/image4.png",
+      "featured": true,
+      "desc": "A visual feast that takes you through pristine alpine lakes, meadows, and glaciers in the heart of Kashmir, often called \"Paradise on Earth\".",
+      "highlights": [
+        "Camp beside seven alpine lakes",
+        "Cross high-altitude mountain passes",
+        "Experience the unique Kashmiri culture"
+      ],
+      "duration": "8 days",
+      "difficulty": "Moderate",
+      "maxGroupSize": 15,
+      "distance": 65,
+      "address": "Kashmir Great Lakes, Sonamarg",
+      "city": "Srinagar",
+      "itinerary": [
+        "Day 1: Arrive at Sonamarg from Srinagar",
+        "Day 2: Trek from Sonamarg to Nichnai via Shekdur",
+        "Day 3: Trek from Nichnai to Vishansar Lake via Nichnai Pass",
+        "Day 4: Trek from Vishansar to Gadsar via Gadsar Pass",
+        "Day 5: Trek from Gadsar to Satsar",
+        "Day 6: Trek from Satsar to Gangbal Twin Lakes",
+        "Day 7: Trek from Gangbal to Naranag",
+        "Day 8: Return to Srinagar"
+      ]
+    },
+    {
+      "id": 5,
+      "location": "Ladakh",
+      "title": "Markha Valley Trek",
+      "price": 499,
+      "rating": 4.6,
+      "reviews": [],
+      "photo": "/Assets/image5.png",
+      "featured": true,
+      "desc": "A classic trek through the remote and stark landscapes of Ladakh, featuring Buddhist monasteries, traditional villages, and high mountain passes.",
+      "highlights": [
+        "Visit ancient Buddhist monasteries",
+        "Cross Kongmaru La pass (5,130m)",
+        "Stay in traditional Ladakhi homestays"
+      ],
+      "duration": "9 days",
+      "difficulty": "Challenging",
+      "maxGroupSize": 12,
+      "distance": 75,
+      "address": "Markha Valley, Ladakh",
+      "city": "Leh",
+      "itinerary": [
+        "Day 1: Arrive at Leh and acclimatize",
+        "Day 2: Second day of acclimatization in Leh with short excursions",
+        "Day 3: Drive to Chilling and trek to Skyu",
+        "Day 4: Trek from Skyu to Markha",
+        "Day 5: Trek from Markha to Hankar",
+        "Day 6: Trek from Hankar to Nimaling",
+        "Day 7: Trek from Nimaling to Shang Sumdo via Kongmaru La",
+        "Day 8: Drive from Shang Sumdo to Leh",
+        "Day 9: Departure from Leh"
+      ]
+    },
+    {
+      "id": 6,
+      "location": "Karnataka",
+      "title": "Kudremukh Trek",
+      "price": 149,
+      "rating": 4.5,
+      "reviews": [],
+      "photo": "/Assets/image6.png",
+      "featured": false,
+      "desc": "Located in the Western Ghats, this trek takes you through lush green forests, grasslands, and streams in the Kudremukh National Park.",
+      "highlights": [
+        "Scenic views of the horse-faced peak",
+        "Rich biodiversity of Western Ghats",
+        "Beautiful waterfalls and streams"
+      ],
+      "duration": "2 days",
+      "difficulty": "Easy",
+      "maxGroupSize": 20,
+      "distance": 22,
+      "address": "Kudremukh National Park",
+      "city": "Chikmagalur",
+      "itinerary": [
+        "Day 1: Drive from Bangalore/Mangalore to Mullodi village, begin trek to Kudremukh peak",
+        "Day 2: Return trek to Mullodi and drive back"
+      ]
+    },
+    {
+      "id": 7,
+      "location": "Maharashtra",
+      "title": "Rajmachi Fort Trek",
+      "price": 129,
+      "rating": 4.4,
+      "reviews": [],
+      "photo": "/Assets/image7.png",
+      "featured": false,
+      "desc": "A popular trek in the Sahyadri range that leads to twin fortresses of Shrivardhan and Manaranjan, offering panoramic views of the surrounding valleys.",
+      "highlights": [
+        "Historic fort exploration",
+        "Stunning views of Sahyadri mountains",
+        "Lush green surroundings during monsoon"
+      ],
+      "duration": "2 days",
+      "difficulty": "Easy",
+      "maxGroupSize": 20,
+      "distance": 15,
+      "address": "Rajmachi Fort, Sahyadri",
+      "city": "Lonavala",
+      "itinerary": [
+        "Day 1: Drive from Mumbai/Pune to Lonavala, trek to Rajmachi village",
+        "Day 2: Explore Shrivardhan and Manaranjan forts, trek back to Lonavala"
+      ]
+    },
+    {
+      "id": 8,
+      "location": "Tamil Nadu",
+      "title": "Kolli Hills Trek",
+      "price": 179,
+      "rating": 4.3,
+      "reviews": [],
+      "photo": "/Assets/image8.png",
+      "featured": false,
+      "desc": "Known as the \"Mountain of Death\" due to its 70 continuous hairpin bends, this trek offers beautiful waterfalls, temples, and viewpoints in the Eastern Ghats.",
+      "highlights": [
+        "Agaya Gangai waterfall",
+        "Botanical gardens and spice plantations",
+        "Ancient Arapaleeswarar Temple"
+      ],
+      "duration": "3 days",
+      "difficulty": "Moderate",
+      "maxGroupSize": 15,
+      "distance": 30,
+      "address": "Kolli Hills, Eastern Ghats",
+      "city": "Namakkal",
+      "itinerary": [
+        "Day 1: Drive from Chennai/Trichy to Kolli Hills base, trek to halfway point",
+        "Day 2: Trek to Agaya Gangai waterfall, explore surrounding areas",
+        "Day 3: Visit Arapaleeswarar Temple, trek down and return"
+      ]
+    },
+    {
+      "id": 9,
+      "location": "Kerala",
+      "title": "Chembra Peak Trek",
+      "price": 99,
+      "rating": 4.7,
+      "reviews": [],
+      "photo": "/Assets/image9.png",
+      "featured": true,
+      "desc": "The highest peak in Wayanad, offering breathtaking views of the heart-shaped lake and surrounding tea plantations and green valleys.",
+      "highlights": [
+        "Heart-shaped lake at 1,100m",
+        "Panoramic views of Wayanad",
+        "Diverse flora and fauna"
+      ],
+      "duration": "1 day",
+      "difficulty": "Moderate",
+      "maxGroupSize": 25,
+      "distance": 9,
+      "address": "Chembra Peak, Wayanad",
+      "city": "Kalpetta",
+      "itinerary": [
+        "Early morning start from Kalpetta",
+        "Trek through tea plantations to the heart-shaped lake",
+        "Continue to Chembra Peak summit",
+        "Descend back to the base by evening"
+      ]
+    }
+  ]

@@ -1,0 +1,130 @@
+.home-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .fans-testimonials-section {
+    padding: 40px 0;
+    background-color: #ffffff;
+  }
+  
+  .testimonials-header {
+    margin-bottom: 40px;
+    text-align: left;
+  }
+  
+  .fans-love-badge {
+    display: inline-block;
+    background-color: #ffa64d;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .section-title {
+    font-size: 32px;
+    color: #1c2e4a;
+    margin: 0;
+    font-weight: 700;
+  }
+  
+  .testimonials-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+  }
+  
+  .testimonial-card {
+    flex: 1;
+    min-width: 300px;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .testimonial-text {
+    color: #555;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-top: 0;
+    margin-bottom: 20px;
+    flex-grow: 1;
+  }
+  
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+  }
+  
+  .author-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+  }
+  
+  .author-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .author-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 5px 0;
+  }
+  
+  .author-role {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 992px) {
+    .testimonials-container {
+      flex-direction: column;
+    }
+  
+    .testimonial-card {
+      min-width: 100%;
+      margin-bottom: 20px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .section-title {
+      font-size: 28px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .fans-testimonials-section {
+      padding: 30px 0;
+    }
+  
+    .testimonials-header {
+      margin-bottom: 30px;
+    }
+  
+    .section-title {
+      font-size: 24px;
+    }
+  
+    .testimonial-card {
+      padding: 20px;
+    }
+  }
+  
