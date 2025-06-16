@@ -2,8 +2,8 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import './Login.css';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
