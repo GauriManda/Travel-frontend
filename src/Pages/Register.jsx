@@ -2,7 +2,10 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import "./Register.css";
+
+
 const BASE_URL = import.meta.env.VITE_API_URL; 
+console.log("Loaded BASE_URL from env:", BASE_URL);
 
 
 
