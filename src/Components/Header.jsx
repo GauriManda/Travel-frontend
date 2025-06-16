@@ -1,13 +1,19 @@
-import React, { useContext, useMemo, useCallback } from 'react';
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import React, {
+  useContext,
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+} from 'react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import './Header.css';
 
 const Header = () => {
   const context = useContext(AuthContext);
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Add error handling for context
   if (!context) {
     console.error('Header component must be used within AuthContext.Provider');
     return <div>Loading...</div>;
@@ -15,38 +21,42 @@ const Header = () => {
 
   const { user, logout } = context;
 
-  // Add error handling for logout function
   if (!logout) {
     console.error('logout function is not available in AuthContext');
     return <div>Authentication Error</div>;
   }
 
-  // Memoize the logout handler to prevent unnecessary re-renders
   const handleLogout = useCallback(() => {
     try {
-      logout(); // Use the logout function from context
+      logout();
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
   }, [logout, navigate]);
 
-  // Memoize username calculation
   const username = useMemo(() => {
-    return user?.username || user?.email?.split('@')[0] || "User";
+    return user?.username || user?.email?.split('@')[0] || 'User';
   }, [user?.username, user?.email]);
 
-  // Only log user changes in development, not on every render
-  React.useEffect(() => {
+  useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log("Header - User state changed:", {
+      console.log('Header - User state changed:', {
         isLoggedIn: !!user,
         username: user?.username,
         userId: user?._id,
-        hasLogout: typeof logout === 'function'
+        hasLogout: typeof logout === 'function',
       });
     }
-  }, [user?._id, user?.username, logout]); // Add logout to dependencies
+  }, [user?._id, user?.username, logout]);
+
+  const toggleMenu = () => {
+    setMenuOpen((prev) => !prev);
+  };
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+  };
 
   return (
     <div className="header-container">
@@ -59,24 +69,76 @@ const Header = () => {
           </span>
           <span className="brand-tagline">Explore the unexplored</span>
         </div>
-        
-        <div className="navbar-menu">
-          <div className="nav-links">
-            <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Home</NavLink>
-            <NavLink to="/about" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>About</NavLink>
-            <NavLink to="/tours" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>Tours</NavLink>
+
+        {/* Hamburger Icon */}
+        <button
+          className="mobile-menu-toggle"
+          onClick={toggleMenu}
+          aria-label="Toggle navigation menu"
+        >
+          <div className={`hamburger ${menuOpen ? 'open' : ''}`}>
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
-          
+        </button>
+
+        {/* Overlay */}
+        {menuOpen && (
+          <div
+            className="navbar-menu-overlay show"
+            onClick={closeMenu}
+          ></div>
+        )}
+
+        {/* Sidebar Menu */}
+        <div className={`navbar-menu ${menuOpen ? 'show' : ''}`}>
+          <div className="nav-links">
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                isActive ? 'nav-link active' : 'nav-link'
+              }
+              onClick={closeMenu}
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                isActive ? 'nav-link active' : 'nav-link'
+              }
+              onClick={closeMenu}
+            >
+              About
+            </NavLink>
+            <NavLink
+              to="/tours"
+              className={({ isActive }) =>
+                isActive ? 'nav-link active' : 'nav-link'
+              }
+              onClick={closeMenu}
+            >
+              Tours
+            </NavLink>
+          </div>
+
           <div className="auth-links">
             {user ? (
               <div className="user-section">
                 <span className="username">Hello, {username}</span>
-                <button className="logout-btn" onClick={handleLogout}>Logout</button>
+                <button className="logout-btn" onClick={() => { handleLogout(); closeMenu(); }}>
+                  Logout
+                </button>
               </div>
             ) : (
               <>
-                <Link to="/login" className="login-link">Login</Link>
-                <Link to="/register" className="register-btn">Register</Link>
+                <Link to="/login" className="login-link" onClick={closeMenu}>
+                  Login
+                </Link>
+                <Link to="/register" className="register-btn" onClick={closeMenu}>
+                  Register
+                </Link>
               </>
             )}
           </div>
