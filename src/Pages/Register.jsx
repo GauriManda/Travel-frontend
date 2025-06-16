@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import "./Register.css";
 
-const BASE_URL = 'http://localhost:4000/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 
 const Register = () => {
   const navigate = useNavigate();
