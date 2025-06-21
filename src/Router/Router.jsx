@@ -8,8 +8,8 @@ import Register from "../Pages/Register";
 import FeaturedTourList from "../Featured/FeatureTourList";
 import TourDetails from "../Pages/TourDetails";
 import Tours from "../Featured/Tours"; 
-import SearchResultList from "../Pages/SearchResultList";
 import BookingSuccess from "../Pages/BookingSuccess";
+import Experience from "../Components/Experience";
 
 
 
@@ -26,6 +26,7 @@ const Router = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/gallery" element={<Gallery />} />
       <Route path="/booking-success/:id" element={<BookingSuccess />} />
+      <Route path="/experiences" element={<Experience />} />
       
 
     </Routes>

@@ -122,7 +122,15 @@ const Header = () => {
               Tours
             </NavLink>
           </div>
-
+ <NavLink
+              to="experiences"
+              className={({ isActive }) =>
+                isActive ? 'nav-link active' : 'nav-link'
+              }
+              onClick={closeMenu}
+            >
+              Experiences
+            </NavLink>
           <div className="auth-links">
             {user ? (
               <div className="user-section">
