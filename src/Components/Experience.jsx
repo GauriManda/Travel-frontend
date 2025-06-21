@@ -28,7 +28,7 @@ const Experience = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   // API configuration
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://travel-backend-ashen-nine.vercel.app/api/v1';
+  VITE_API_URL=https://travel-backend-ashen-nine.vercel.app/api/v1
 
   // Debug logging
   console.log('🌐 Using API URL:', API_BASE_URL);
