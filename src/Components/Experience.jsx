@@ -64,99 +64,113 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
   }, [experiences.length, loading]);
 
   // Fetch experiences with improved error handling
-  const fetchExperiences = useCallback(async (page = 1, append = false) => {
-    try {
-      if (!append) {
-        setLoading(true);
-        setError(null);
-      }
+ const fetchExperiences = useCallback(async (page = 1, append = false) => {
+  try {
+    if (!append) {
+      setLoading(true);
+      setError(null);
+    }
 
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: '12',
-        ...(filterBy !== 'all' && { category: filterBy }),
-        ...(searchTerm && { search: searchTerm }),
-        sortBy: sortBy
-      }).toString();
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: '12',
+      ...(filterBy !== 'all' && { category: filterBy }),
+      ...(searchTerm && { search: searchTerm }),
+      sortBy: sortBy
+    }).toString();
 
-      const url = `${API_BASE_URL}/experiences?${queryParams}`;
-      console.log('🔄 Fetching experiences from:', url);
+    const url = `${API_BASE_URL}/experiences?${queryParams}`;
+    console.log('🔄 Fetching experiences from:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      signal: AbortSignal.timeout(10000)
+    });
+    
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    const contentType = response.headers.get('content-type');
+    console.log('📄 Content-Type:', contentType);
+    
+    if (!response.ok) {
+      const responseText = await response.text();
+      console.log('❌ Error response body:', responseText);
       
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        // Add timeout
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      });
-      
-      console.log('📡 Response status:', response.status);
-      
-      if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`;
+      let errorMessage = `HTTP ${response.status}`;
+      if (contentType && contentType.includes('application/json')) {
         try {
-          const errorData = await response.json();
+          const errorData = JSON.parse(responseText);
           errorMessage = errorData.message || errorMessage;
         } catch {
-          errorMessage = response.statusText || errorMessage;
+          errorMessage = responseText || response.statusText || errorMessage;
         }
-        throw new Error(errorMessage);
-      }
-      
-      const data = await response.json();
-      console.log('📄 Response data:', data);
-      
-      if (data.success) {
-        const newExperiences = data.experiences || [];
-        const pagination = data.pagination || {};
-        
-        if (append) {
-          setExperiences(prev => [...prev, ...newExperiences]);
-        } else {
-          setExperiences(newExperiences);
-        }
-        
-        setCurrentPage(pagination.currentPage || page);
-        setTotalPages(pagination.totalPages || 1);
-        setTotalExperiences(pagination.totalExperiences || newExperiences.length);
-        setHasMore(pagination.hasNext || false);
-        
-        console.log('✅ Successfully loaded', newExperiences.length, 'experiences');
-        setError(null); // Clear any previous errors
       } else {
-        throw new Error(data.message || 'Failed to fetch experiences');
+        errorMessage = responseText || response.statusText || errorMessage;
       }
-    } catch (error) {
-      console.error('💥 Error fetching experiences:', error);
-      
-      // Set user-friendly error messages
-      let errorMessage = 'Something went wrong!';
-      
-      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-        errorMessage = 'Request timed out. Please check your internet connection.';
-      } else if (error.message.includes('Failed to fetch') || !isOnline) {
-        errorMessage = 'Unable to connect to server. Please check your internet connection.';
-      } else if (error.message.includes('404')) {
-        errorMessage = 'Service not found. Please try again later.';
-      } else if (error.message.includes('500')) {
-        errorMessage = 'Server error. Please try again later.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
-      
-      // Don't clear experiences on pagination errors
-      if (!append) {
-        setExperiences([]);
-      }
-    } finally {
-      setLoading(false);
+      throw new Error(errorMessage);
     }
-  }, [API_BASE_URL, filterBy, searchTerm, sortBy, isOnline]);
-
+    
+    const responseText = await response.text();
+    console.log('✅ Response text preview:', responseText.substring(0, 200));
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`Expected JSON but got ${contentType}. Response: ${responseText.substring(0, 200)}...`);
+    }
+    
+    const data = JSON.parse(responseText);
+    console.log('📄 Parsed response data:', data);
+    
+    if (data.success) {
+      const newExperiences = data.experiences || [];
+      const pagination = data.pagination || {};
+      
+      if (append) {
+        setExperiences(prev => [...prev, ...newExperiences]);
+      } else {
+        setExperiences(newExperiences);
+      }
+      
+      setCurrentPage(pagination.currentPage || page);
+      setTotalPages(pagination.totalPages || 1);
+      setTotalExperiences(pagination.totalExperiences || newExperiences.length);
+      setHasMore(pagination.hasNext || false);
+      
+      console.log('✅ Successfully loaded', newExperiences.length, 'experiences');
+      setError(null);
+    } else {
+      throw new Error(data.message || 'Failed to fetch experiences');
+    }
+  } catch (error) {
+    console.error('💥 Error fetching experiences:', error);
+    
+    let errorMessage = 'Something went wrong!';
+    
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      errorMessage = 'Request timed out. Please check your internet connection.';
+    } else if (error.message.includes('Failed to fetch') || !isOnline) {
+      errorMessage = 'Unable to connect to server. Please check your internet connection.';
+    } else if (error.message.includes('404')) {
+      errorMessage = 'Service not found. Please check your API URL configuration.';
+    } else if (error.message.includes('500')) {
+      errorMessage = 'Server error. Please try again later.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    setError(errorMessage);
+    
+    if (!append) {
+      setExperiences([]);
+    }
+  } finally {
+    setLoading(false);
+  }
+}, [API_BASE_URL, filterBy, searchTerm, sortBy, isOnline]);
   // Initial load
   useEffect(() => {
     fetchExperiences();
@@ -172,91 +186,121 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
     return () => clearTimeout(timeoutId);
   }, [searchTerm, filterBy, sortBy]);
 
-  // Add new experience with improved error handling
-  const handleAddExperience = async (experienceData) => {
-    try {
-      console.log('🚀 Starting to add experience:', experienceData);
-      setError(null);
-      
-      // Create FormData for file upload
-      const formData = new FormData();
-      
-      // Append all experience data
-      Object.keys(experienceData).forEach(key => {
-        if (key === 'images' && experienceData[key]) {
-          console.log(`📷 Adding ${experienceData[key].length} images`);
-          for (let i = 0; i < experienceData[key].length; i++) {
-            formData.append('images', experienceData[key][i]);
-          }
-        } else if (key === 'itinerary' || key === 'categories') {
-          const jsonData = JSON.stringify(experienceData[key]);
-          console.log(`📝 Adding ${key}:`, jsonData);
-          formData.append(key, jsonData);
-        } else if (experienceData[key] !== undefined && experienceData[key] !== null) {
-          console.log(`📋 Adding ${key}:`, experienceData[key]);
-          formData.append(key, experienceData[key]);
+  // Enhanced handleAddExperience function with better error debugging
+const handleAddExperience = async (experienceData) => {
+  try {
+    console.log('🚀 Starting to add experience:', experienceData);
+    setError(null);
+    
+    // Create FormData for file upload
+    const formData = new FormData();
+    
+    // Append all experience data
+    Object.keys(experienceData).forEach(key => {
+      if (key === 'images' && experienceData[key]) {
+        console.log(`📷 Adding ${experienceData[key].length} images`);
+        for (let i = 0; i < experienceData[key].length; i++) {
+          formData.append('images', experienceData[key][i]);
         }
-      });
+      } else if (key === 'itinerary' || key === 'categories') {
+        const jsonData = JSON.stringify(experienceData[key]);
+        console.log(`📝 Adding ${key}:`, jsonData);
+        formData.append(key, jsonData);
+      } else if (experienceData[key] !== undefined && experienceData[key] !== null) {
+        console.log(`📋 Adding ${key}:`, experienceData[key]);
+        formData.append(key, experienceData[key]);
+      }
+    });
 
-      const submitUrl = `${API_BASE_URL}/experiences`;
-      console.log('🌐 Making request to:', submitUrl);
+    const submitUrl = `${API_BASE_URL}/experiences`;
+    console.log('🌐 Making request to:', submitUrl);
+    
+    const response = await fetch(submitUrl, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      signal: AbortSignal.timeout(30000) // 30 second timeout for uploads
+    });
+    
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    // Check the content type to see if we're getting HTML instead of JSON
+    const contentType = response.headers.get('content-type');
+    console.log('📄 Content-Type:', contentType);
+    
+    if (!response.ok) {
+      // Get the response text first to see what we're actually receiving
+      const responseText = await response.text();
+      console.log('❌ Error response body:', responseText);
       
-      const response = await fetch(submitUrl, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-        signal: AbortSignal.timeout(30000) // 30 second timeout for uploads
-      });
+      let errorMessage = `HTTP ${response.status}`;
       
-      console.log('📡 Response status:', response.status);
-      
-      if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}`;
+      // Try to parse as JSON if it looks like JSON
+      if (contentType && contentType.includes('application/json')) {
         try {
-          const errorData = await response.json();
+          const errorData = JSON.parse(responseText);
           errorMessage = errorData.message || errorMessage;
-          
-          // Handle validation errors
           if (errorData.errors) {
             errorMessage = errorData.errors.join(', ');
           }
-        } catch {
-          errorMessage = response.statusText || errorMessage;
+        } catch (e) {
+          console.log('Failed to parse error response as JSON:', e);
+          errorMessage = responseText || response.statusText || errorMessage;
         }
-        throw new Error(errorMessage);
-      }
-      
-      const data = await response.json();
-      console.log('✅ Response data:', data);
-      
-      if (data.success) {
-        // Add new experience to the beginning of the list
-        setExperiences(prev => [data.experience, ...prev]);
-        setShowAddModal(false);
-        setTotalExperiences(prev => prev + 1);
-        console.log('🎉 Experience added successfully!');
-        
-        // Show success message
-        // You might want to implement a toast notification system here
       } else {
-        throw new Error(data.message || 'Failed to add experience');
-      }
-    } catch (error) {
-      console.error('💥 Error adding experience:', error);
-      
-      let errorMessage = 'Failed to add experience!';
-      if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-        errorMessage = 'Upload timed out. Please try again.';
-      } else if (error.message.includes('Failed to fetch') || !isOnline) {
-        errorMessage = 'Cannot connect to server. Please check your internet connection.';
-      } else if (error.message) {
-        errorMessage = error.message;
+        // If it's HTML or plain text, use it directly (but truncate if too long)
+        errorMessage = responseText.length > 200 
+          ? responseText.substring(0, 200) + '...' 
+          : responseText || response.statusText || errorMessage;
       }
       
-      setError(errorMessage);
+      throw new Error(errorMessage);
     }
-  };
-
+    
+    // Check if response is actually JSON before parsing
+    const responseText = await response.text();
+    console.log('✅ Response text:', responseText);
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('❌ Expected JSON but got:', contentType);
+      throw new Error(`Server returned ${contentType || 'unknown content type'} instead of JSON. Response: ${responseText.substring(0, 200)}...`);
+    }
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log('✅ Parsed response data:', data);
+    } catch (parseError) {
+      console.error('❌ Failed to parse JSON:', parseError);
+      console.error('❌ Response text was:', responseText);
+      throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
+    }
+    
+    if (data.success) {
+      // Add new experience to the beginning of the list
+      setExperiences(prev => [data.experience, ...prev]);
+      setShowAddModal(false);
+      setTotalExperiences(prev => prev + 1);
+      console.log('🎉 Experience added successfully!');
+    } else {
+      throw new Error(data.message || 'Failed to add experience');
+    }
+  } catch (error) {
+    console.error('💥 Error adding experience:', error);
+    
+    let errorMessage = 'Failed to add experience!';
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      errorMessage = 'Upload timed out. Please try again.';
+    } else if (error.message.includes('Failed to fetch') || !isOnline) {
+      errorMessage = 'Cannot connect to server. Please check your internet connection.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    setError(errorMessage);
+  }
+};
   // Handle like/unlike experience
   const handleLikeExperience = async (experienceId) => {
     try {
