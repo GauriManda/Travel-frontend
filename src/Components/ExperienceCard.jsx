@@ -1,31 +1,19 @@
 import React from 'react';
-import { MapPin, Calendar, Users, Star, Heart, Eye } from 'lucide-react';
+import { MapPin, Calendar, Users, Eye } from 'lucide-react';
 import './ExperienceCard.css';
+
 const ExperienceCard = ({ experience, onLike, onClick }) => {
   const {
     _id,
     title,
     destination,
     description,
-    images,
     duration,
     groupSize,
-    rating,
-    likes,
-    isLiked,
     budgetRange,
     categories,
-    author,
-    createdAt
+    image // 🔴 Make sure this exists
   } = experience;
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   const getBudgetColor = (budget) => {
     switch (budget) {
@@ -38,37 +26,21 @@ const ExperienceCard = ({ experience, onLike, onClick }) => {
 
   return (
     <div className="experience-card" onClick={onClick}>
-      <div className="card-image">
-        <img 
-          src={images[0] || '/api/placeholder/400/250'} 
-          alt={title}
-          onError={(e) => {
-            e.target.src = '/api/placeholder/400/250';
-          }}
-        />
-        <div className="card-overlay">
-          <div className="budget-badge" style={{ backgroundColor: getBudgetColor(budgetRange) }}>
-            {budgetRange}
-          </div>
-          <button 
-            className={`like-btn ${isLiked ? 'liked' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onLike(_id);
-            }}
-          >
-            <Heart size={18} fill={isLiked ? '#ef4444' : 'none'} />
-            {likes}
-          </button>
+      {/* 🔵 Show image at top if available */}
+      {image && (
+        <div className="card-top-image">
+          <img src={image} alt={title || 'Experience'} />
         </div>
-      </div>
+      )}
 
       <div className="card-content">
         <div className="card-header">
           <h3 className="card-title">{title}</h3>
-          <div className="rating">
-            <Star size={16} fill="#fbbf24" color="#fbbf24" />
-            <span>{rating.toFixed(1)}</span>
+          <div
+            className="budget-badge"
+            style={{ backgroundColor: getBudgetColor(budgetRange) }}
+          >
+            {budgetRange}
           </div>
         </div>
 
@@ -77,7 +49,7 @@ const ExperienceCard = ({ experience, onLike, onClick }) => {
           <span>{destination}</span>
         </div>
 
-        <p className="description">{description.substring(0, 120)}...</p>
+        <p className="description">{description?.substring(0, 120)}...</p>
 
         <div className="card-details">
           <div className="detail-item">
@@ -101,22 +73,9 @@ const ExperienceCard = ({ experience, onLike, onClick }) => {
           )}
         </div>
 
-        <div className="card-footer">
-          <div className="author-info">
-            <img 
-              src={author.avatar || '/api/placeholder/32/32'} 
-              alt={author.name}
-              className="author-avatar"
-            />
-            <div>
-              <span className="author-name">{author.name}</span>
-              <span className="post-date">{formatDate(createdAt)}</span>
-            </div>
-          </div>
-          <div className="view-more">
-            <Eye size={16} />
-            <span>View Details</span>
-          </div>
+        <div className="view-more">
+          <Eye size={16} />
+          <span>View Details</span>
         </div>
       </div>
     </div>

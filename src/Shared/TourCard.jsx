@@ -3,15 +3,6 @@ import { Link } from "react-router-dom";
 import "./TourCard.css";
 
 const TourCard = memo(({ tour }) => {
-  // Only log in development mode and add more details to debug
-  if (process.env.NODE_ENV === 'development') {
-    console.log("Rendering TourCard:", {
-      id: tour._id,
-      title: tour.title,
-      timestamp: Date.now()
-    });
-  }
-
   // Memoize the difficulty class to prevent recalculation
   const difficultyClass = React.useMemo(() => {
     return `difficulty-badge ${tour.difficulty?.toLowerCase?.() || "unknown"}`;
@@ -20,13 +11,12 @@ const TourCard = memo(({ tour }) => {
   return (
     <Link to={`/trek/${tour._id}`} className="tour-card">
       <div className="tour-card-image">
-       <img
-  src={tour.photo || '/Assets/default.jpg'}
-  alt={tour.title}
-  className="tour-image"
-  onError={(e) => (e.target.src = '/Assets/default.jpg')}
-/>
-
+        <img
+          src={tour.photo || '/Assets/default.jpg'}
+          alt={tour.title}
+          className="tour-image"
+          onError={(e) => (e.target.src = '/Assets/default.jpg')}
+        />
 
         <div className="tour-card-badge">
           <span className={difficultyClass}>

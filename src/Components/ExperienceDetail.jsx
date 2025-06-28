@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { X, MapPin, Calendar, Users, DollarSign, Star, Heart, Share2, Clock, Utensils, Bed } from 'lucide-react';
+import { X, MapPin, Calendar, Users, DollarSign, Share2, Clock, Utensils, Bed } from 'lucide-react';
 import './ExperienceDetail.css';
 
-const ExperienceDetail = ({ experience, onClose, onLike }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const ExperienceDetail = ({ experience, onClose }) => {
   const [showFullItinerary, setShowFullItinerary] = useState(false);
 
   const {
@@ -11,30 +10,16 @@ const ExperienceDetail = ({ experience, onClose, onLike }) => {
     title,
     destination,
     description,
-    images,
     duration,
     groupSize,
-    rating,
-    likes,
-    isLiked,
     budgetRange,
     categories,
-    author,
-    createdAt,
     itinerary,
     tips,
     bestTimeToVisit,
     transportation,
     totalCost
   } = experience;
-
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   const getBudgetColor = (budget) => {
     switch (budget) {
@@ -43,14 +28,6 @@ const ExperienceDetail = ({ experience, onClose, onLike }) => {
       case 'luxury': return '#8b5cf6';
       default: return '#6b7280';
     }
-  };
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   const handleShare = () => {
@@ -77,39 +54,6 @@ const ExperienceDetail = ({ experience, onClose, onLike }) => {
         </div>
 
         <div className="detail-content">
-          {/* Image Gallery */}
-          <div className="image-gallery">
-            {images && images.length > 0 ? (
-              <>
-                <img 
-                  src={images[currentImageIndex]} 
-                  alt={`${title} - Image ${currentImageIndex + 1}`}
-                  className="main-image"
-                />
-                {images.length > 1 && (
-                  <>
-                    <button className="nav-btn prev-btn" onClick={prevImage}>‹</button>
-                    <button className="nav-btn next-btn" onClick={nextImage}>›</button>
-                    <div className="image-indicators">
-                      {images.map((_, index) => (
-                        <button
-                          key={index}
-                          className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
-                          onClick={() => setCurrentImageIndex(index)}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <div className="no-image">
-                <MapPin size={48} />
-                <span>No images available</span>
-              </div>
-            )}
-          </div>
-
           {/* Content */}
           <div className="detail-info">
             <div className="experience-header">
@@ -122,13 +66,6 @@ const ExperienceDetail = ({ experience, onClose, onLike }) => {
               </div>
 
               <div className="action-buttons">
-                <button 
-                  className={`like-btn ${isLiked ? 'liked' : ''}`}
-                  onClick={() => onLike(_id)}
-                >
-                  <Heart size={20} fill={isLiked ? '#ef4444' : 'none'} />
-                  {likes}
-                </button>
                 <button className="share-btn" onClick={handleShare}>
                   <Share2 size={20} />
                 </button>
@@ -150,10 +87,6 @@ const ExperienceDetail = ({ experience, onClose, onLike }) => {
                   {budgetRange}
                 </span>
               </div>
-              <div className="meta-item">
-                <Star size={16} fill="#fbbf24" color="#fbbf24" />
-                <span>{rating.toFixed(1)}</span>
-              </div>
             </div>
 
             <div className="categories">
@@ -162,18 +95,6 @@ const ExperienceDetail = ({ experience, onClose, onLike }) => {
                   {category}
                 </span>
               ))}
-            </div>
-
-            <div className="author-section">
-              <img 
-                src={author.avatar || '/api/placeholder/40/40'} 
-                alt={author.name}
-                className="author-avatar"
-              />
-              <div className="author-info">
-                <span className="author-name">{author.name}</span>
-                <span className="post-date">Shared on {formatDate(createdAt)}</span>
-              </div>
             </div>
 
             <div className="description-section">

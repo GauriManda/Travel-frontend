@@ -149,21 +149,36 @@ const Gallery = () => {
     }}>
       {/* Header Section */}
       <section className="gallery-header" style={{
-        background: 'linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%)',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
         color: 'white',
         padding: '80px 0',
-        textAlign: 'center'
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 30% 50%, rgba(255, 126, 1, 0.1) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(45, 90, 39, 0.1) 0%, transparent 50%)',
+            pointerEvents: 'none'
+          }}
+        />
         <div className="header-content" style={{
           maxWidth: '800px',
           margin: '0 auto',
-          padding: '0 20px'
+          padding: '0 20px',
+          position: 'relative',
+          zIndex: 1
         }}>
           <h1 className="header-title" style={{
             fontSize: '3rem',
             fontWeight: '700',
             marginBottom: '1.5rem',
-            textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+            textShadow: '0 4px 8px rgba(0,0,0,0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -202,8 +217,7 @@ const Gallery = () => {
             color: '#2d5a27',
             justifyContent: 'center'
           }}>
-            <Filter size={20} />
-            <span>Filter by Category</span>
+            
           </div>
           <div className="filter-buttons" style={{
             display: 'flex',

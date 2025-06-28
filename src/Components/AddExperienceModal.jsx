@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, MapPin, Calendar, Users, DollarSign, Tag, Loader2 } from 'lucide-react';
-import './AddExperienceModal.css';
+import { X, MapPin, Calendar, Users, DollarSign, Tag, Loader2, AlertCircle } from 'lucide-react';
 
 const AddExperienceModal = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -19,26 +18,25 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [submitError, setSubmitError] = useState('');
+
+  // Get API URL from environment
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const categories = [
     'adventure', 'cultural', 'nature', 'food', 'photography', 
     'solo-travel', 'family', 'romantic', 'budget', 'luxury'
   ];
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-  const MAX_FILES = 10;
-  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (submitError) {
+      setSubmitError('');
+    }
   };
 
   const handleCategoryToggle = (category) => {
@@ -82,210 +80,198 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
     }
   };
 
-  const validateFile = (file) => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return `${file.name}: Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.`;
+  const validateForm = () => {
+    if (!formData.title.trim()) {
+      setSubmitError('Title is required');
+      return false;
+    }
+    if (!formData.destination.trim()) {
+      setSubmitError('Destination is required');
+      return false;
+    }
+    if (!formData.description.trim()) {
+      setSubmitError('Description is required');
+      return false;
+    }
+    if (!formData.duration || parseInt(formData.duration) < 1) {
+      setSubmitError('Duration must be at least 1 day');
+      return false;
     }
     
-    if (file.size > MAX_FILE_SIZE) {
-      return `${file.name}: File too large. Maximum size is 5MB.`;
+    const hasValidItinerary = formData.itinerary.some(day => day.activities && day.activities.trim());
+    if (!hasValidItinerary) {
+      setSubmitError('Please add activities for at least one day');
+      return false;
     }
     
-    return null;
-  };
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    
-    // Check total file limit
-    if (imageFiles.length + files.length > MAX_FILES) {
-      alert(`You can only upload up to ${MAX_FILES} images total.`);
-      return;
-    }
-
-    const validFiles = [];
-    const errors = [];
-
-    files.forEach(file => {
-      const error = validateFile(file);
-      if (error) {
-        errors.push(error);
-      } else {
-        validFiles.push(file);
-      }
-    });
-
-    if (errors.length > 0) {
-      alert('Some files were rejected:\n' + errors.join('\n'));
-    }
-
-    if (validFiles.length === 0) return;
-
-    // Add valid files to state
-    setImageFiles(prev => [...prev, ...validFiles]);
-
-    // Create preview URLs
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreviews(prev => [...prev, {
-          url: e.target.result,
-          name: file.name,
-          size: file.size
-        }]);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Clear the input so the same file can be selected again if needed
-    e.target.value = '';
-  };
-
-  const removeImage = (index) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const submitExperience = async (experienceData, files) => {
-    const formDataToSend = new FormData();
-
-    // Add all form fields
-    Object.keys(experienceData).forEach(key => {
-      if (key === 'itinerary' || key === 'categories') {
-        formDataToSend.append(key, JSON.stringify(experienceData[key]));
-      } else {
-        formDataToSend.append(key, experienceData[key]);
-      }
-    });
-
-    // Add image files
-    files.forEach(file => {
-      formDataToSend.append('images', file);
-    });
-
-    const response = await fetch('/api/v1/experiences', {
-      method: 'POST',
-      body: formDataToSend,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create experience');
-    }
-
-    return response.json();
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!formData.title.trim()) {
-      alert('Please enter a title for your experience');
-      return;
-    }
-    
-    if (!formData.destination.trim()) {
-      alert('Please enter a destination');
-      return;
-    }
-    
-    if (!formData.description.trim()) {
-      alert('Please enter a description');
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
-    setUploadProgress(0);
+    setSubmitError('');
 
     try {
-      // Simulate upload progress (you can implement real progress tracking)
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      // Prepare the data according to your backend API structure
+      const experienceData = {
+        title: formData.title.trim(),
+        destination: formData.destination.trim(),
+        description: formData.description.trim(),
+        duration: parseInt(formData.duration),
+        groupSize: parseInt(formData.groupSize) || 1,
+        budgetRange: formData.budgetRange,
+        categories: formData.categories,
+        tips: formData.tips.trim() || undefined,
+        bestTimeToVisit: formData.bestTimeToVisit.trim() || undefined,
+        transportation: formData.transportation.trim() || undefined,
+        totalCost: formData.totalCost ? parseFloat(formData.totalCost) : undefined,
+        // Filter out empty itinerary days and format properly
+        itinerary: formData.itinerary
+          .filter(day => day.activities && day.activities.trim())
+          .map((day, index) => ({
+            day: index + 1,
+            activities: day.activities.trim(),
+            accommodation: day.accommodation.trim() || undefined,
+            meals: day.meals.trim() || undefined,
+            notes: day.notes.trim() || undefined
+          })),
+        // Add some default values that your backend might expect
+        author: {
+          name: 'Anonymous User',
+          avatar: '/api/placeholder/32/32'
+        },
+        images: [], // Empty array since we're not handling image uploads
+        rating: 0, // Default rating
+        likes: 0,
+        isLiked: false
+      };
 
-      const result = await submitExperience(formData, imageFiles);
-      
-      clearInterval(progressInterval);
-      setUploadProgress(100);
+      console.log('🚀 Submitting experience data:', experienceData);
 
-      // Call the parent's onSubmit callback
-      onSubmit(result.experience);
-      
-      // Close modal after short delay to show completion
-      setTimeout(() => {
-        onClose();
-      }, 500);
+      const response = await fetch(`${API_BASE_URL}/experiences`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(experienceData)
+      });
+
+      console.log('📡 Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Experience created successfully:', result);
+
+      // Call the onSubmit callback with the created experience
+      if (onSubmit) {
+        // Pass the created experience data to the parent component
+        onSubmit(result);
+      }
+
+      // Close the modal
+      onClose();
 
     } catch (error) {
-      console.error('Failed to submit experience:', error);
-      alert('Failed to submit experience: ' + error.message);
+      console.error('💥 Error creating experience:', error);
+      
+      let errorMessage = 'Failed to create experience. ';
+      
+      if (error.message.includes('Failed to fetch')) {
+        errorMessage += 'Please check your internet connection.';
+      } else if (error.message.includes('404')) {
+        errorMessage += 'API endpoint not found. Please check your configuration.';
+      } else if (error.message.includes('500')) {
+        errorMessage += 'Server error. Please try again later.';
+      } else {
+        errorMessage += error.message;
+      }
+      
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
-      setUploadProgress(0);
     }
   };
 
   const nextStep = () => {
-    // Add validation for each step
     if (currentStep === 1) {
       if (!formData.title.trim() || !formData.destination.trim() || !formData.description.trim()) {
-        alert('Please fill in all required fields');
+        setSubmitError('Please fill in all required fields');
         return;
       }
     }
-    setCurrentStep(prev => Math.min(prev + 1, 4));
+    
+    if (currentStep === 2) {
+      const hasValidItinerary = formData.itinerary.some(day => day.activities && day.activities.trim());
+      if (!hasValidItinerary) {
+        setSubmitError('Please add activities for at least one day');
+        return;
+      }
+    }
+    
+    setSubmitError('');
+    setCurrentStep(prev => Math.min(prev + 1, 3));
   };
 
-  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+  const prevStep = () => {
+    setSubmitError('');
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
 
   return (
-    <div className="modal-overlay">
-      <div className="add-experience-modal">
-        <div className="modal-header">
-          <h2>Share Your Travel Experience</h2>
-          <button className="close-btn" onClick={onClose} disabled={isSubmitting}>
+    <div style={styles.modalOverlay}>
+      <div style={styles.modal}>
+        <div style={styles.modalHeader}>
+          <h2 style={styles.modalTitle}>Share Your Travel Experience</h2>
+          <button 
+            style={styles.closeBtn} 
+            onClick={onClose} 
+            disabled={isSubmitting}
+          >
             <X size={24} />
           </button>
         </div>
 
-        <div className="step-indicator">
-          {[1, 2, 3, 4].map(step => (
+        <div style={styles.stepIndicator}>
+          {[1, 2, 3].map(step => (
             <div 
               key={step} 
-              className={`step ${currentStep >= step ? 'active' : ''}`}
+              style={{
+                ...styles.step,
+                ...(currentStep >= step ? styles.stepActive : {}),
+                ...(currentStep === step ? styles.stepCurrent : {})
+              }}
             >
               {step}
             </div>
           ))}
         </div>
 
-        {isSubmitting && (
-          <div className="upload-progress">
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-            <p>Uploading experience... {uploadProgress}%</p>
+        {/* Error Banner */}
+        {submitError && (
+          <div style={styles.errorBanner}>
+            <AlertCircle size={20} />
+            <span>{submitError}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="experience-form">
-          {/* Step 1: Basic Information */}
+        <div style={styles.formContainer}>
           {currentStep === 1 && (
-            <div className="form-step">
-              <h3>Basic Information</h3>
+            <div style={styles.formStep}>
+              <h3 style={styles.stepTitle}>Basic Information</h3>
               
-              <div className="form-group">
-                <label>Experience Title *</label>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Experience Title *</label>
                 <input
                   type="text"
                   name="title"
@@ -294,13 +280,14 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                   placeholder="Give your experience a catchy title"
                   required
                   disabled={isSubmitting}
+                  style={styles.input}
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>
-                    <MapPin size={16} />
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.labelWithIcon}>
+                    <MapPin size={16} style={styles.icon} />
                     Destination *
                   </label>
                   <input
@@ -311,12 +298,13 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                     placeholder="City, Country"
                     required
                     disabled={isSubmitting}
+                    style={styles.input}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>
-                    <Calendar size={16} />
+                <div style={styles.formGroup}>
+                  <label style={styles.labelWithIcon}>
+                    <Calendar size={16} style={styles.icon} />
                     Duration (days) *
                   </label>
                   <input
@@ -327,12 +315,13 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                     min="1"
                     required
                     disabled={isSubmitting}
+                    style={styles.input}
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Description *</label>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Description *</label>
                 <textarea
                   name="description"
                   value={formData.description}
@@ -341,13 +330,14 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                   rows="4"
                   required
                   disabled={isSubmitting}
+                  style={styles.textarea}
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>
-                    <Users size={16} />
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.labelWithIcon}>
+                    <Users size={16} style={styles.icon} />
                     Group Size
                   </label>
                   <input
@@ -357,12 +347,14 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                     onChange={handleInputChange}
                     min="1"
                     disabled={isSubmitting}
+                    style={styles.input}
+                    placeholder="1"
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>
-                    <DollarSign size={16} />
+                <div style={styles.formGroup}>
+                  <label style={styles.labelWithIcon}>
+                    <DollarSign size={16} style={styles.icon} />
                     Budget Range
                   </label>
                   <select
@@ -370,25 +362,29 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                     value={formData.budgetRange}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
+                    style={styles.select}
                   >
-                    <option value="budget">Budget (Under 500Rs/day)</option>
-                    <option value="mid-range">Mid-range (500-1500Rs/day)</option>
-                    <option value="luxury">Luxury (1500Rs+/day)</option>
+                    <option value="budget">Budget (Under ₹2000/day)</option>
+                    <option value="mid-range">Mid-range (₹2000-6000/day)</option>
+                    <option value="luxury">Luxury (₹6000+/day)</option>
                   </select>
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>
-                  <Tag size={16} />
+              <div style={styles.formGroup}>
+                <label style={styles.labelWithIcon}>
+                  <Tag size={16} style={styles.icon} />
                   Categories
                 </label>
-                <div className="categories-grid">
+                <div style={styles.categoriesGrid}>
                   {categories.map(category => (
                     <button
                       key={category}
                       type="button"
-                      className={`category-btn ${formData.categories.includes(category) ? 'selected' : ''}`}
+                      style={{
+                        ...styles.categoryBtn,
+                        ...(formData.categories.includes(category) ? styles.categoryBtnSelected : {})
+                      }}
                       onClick={() => handleCategoryToggle(category)}
                       disabled={isSubmitting}
                     >
@@ -400,19 +396,18 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
             </div>
           )}
 
-          {/* Step 2: Detailed Itinerary */}
           {currentStep === 2 && (
-            <div className="form-step">
-              <h3>Detailed Itinerary</h3>
+            <div style={styles.formStep}>
+              <h3 style={styles.stepTitle}>Detailed Itinerary</h3>
               
               {formData.itinerary.map((day, index) => (
-                <div key={index} className="itinerary-day">
-                  <div className="day-header">
-                    <h4>Day {day.day}</h4>
+                <div key={index} style={styles.itineraryDay}>
+                  <div style={styles.dayHeader}>
+                    <h4 style={styles.dayTitle}>Day {day.day}</h4>
                     {formData.itinerary.length > 1 && (
                       <button
                         type="button"
-                        className="remove-day-btn"
+                        style={styles.removeDayBtn}
                         onClick={() => removeItineraryDay(index)}
                         disabled={isSubmitting}
                       >
@@ -421,49 +416,53 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                     )}
                   </div>
 
-                  <div className="form-group">
-                    <label>Activities</label>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Activities *</label>
                     <textarea
                       value={day.activities}
                       onChange={(e) => handleItineraryChange(index, 'activities', e.target.value)}
                       placeholder="What did you do this day?"
                       rows="2"
                       disabled={isSubmitting}
+                      style={styles.textarea}
                     />
                   </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Accommodation</label>
+                  <div style={styles.formRow}>
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Accommodation</label>
                       <input
                         type="text"
                         value={day.accommodation}
                         onChange={(e) => handleItineraryChange(index, 'accommodation', e.target.value)}
                         placeholder="Where did you stay?"
                         disabled={isSubmitting}
+                        style={styles.input}
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>Meals</label>
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>Meals</label>
                       <input
                         type="text"
                         value={day.meals}
                         onChange={(e) => handleItineraryChange(index, 'meals', e.target.value)}
                         placeholder="Notable restaurants/food"
                         disabled={isSubmitting}
+                        style={styles.input}
                       />
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>Notes</label>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Notes</label>
                     <textarea
                       value={day.notes}
                       onChange={(e) => handleItineraryChange(index, 'notes', e.target.value)}
                       placeholder="Any additional notes or tips for this day"
                       rows="2"
                       disabled={isSubmitting}
+                      style={styles.textarea}
                     />
                   </div>
                 </div>
@@ -471,7 +470,7 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
 
               <button
                 type="button"
-                className="add-day-btn"
+                style={styles.addDayBtn}
                 onClick={addItineraryDay}
                 disabled={isSubmitting}
               >
@@ -480,13 +479,12 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
             </div>
           )}
 
-          {/* Step 3: Additional Details */}
           {currentStep === 3 && (
-            <div className="form-step">
-              <h3>Additional Details</h3>
+            <div style={styles.formStep}>
+              <h3 style={styles.stepTitle}>Additional Details</h3>
 
-              <div className="form-group">
-                <label>Travel Tips</label>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Travel Tips</label>
                 <textarea
                   name="tips"
                   value={formData.tips}
@@ -494,12 +492,13 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                   placeholder="Share your best tips for other travelers"
                   rows="4"
                   disabled={isSubmitting}
+                  style={styles.textarea}
                 />
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Best Time to Visit</label>
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Best Time to Visit</label>
                   <input
                     type="text"
                     name="bestTimeToVisit"
@@ -507,11 +506,12 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                     onChange={handleInputChange}
                     placeholder="e.g., March to May"
                     disabled={isSubmitting}
+                    style={styles.input}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Total Cost (USD)</label>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Total Cost (₹)</label>
                   <input
                     type="number"
                     name="totalCost"
@@ -519,12 +519,13 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                     onChange={handleInputChange}
                     placeholder="Approximate total cost"
                     disabled={isSubmitting}
+                    style={styles.input}
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Transportation</label>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Transportation</label>
                 <textarea
                   name="transportation"
                   value={formData.transportation}
@@ -532,66 +533,20 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
                   placeholder="How did you get around? Flights, trains, buses, etc."
                   rows="3"
                   disabled={isSubmitting}
+                  style={styles.textarea}
                 />
               </div>
             </div>
           )}
 
-          {/* Step 4: Photos */}
-          {currentStep === 4 && (
-            <div className="form-step">
-              <h3>Photos</h3>
-              
-              <div className="image-upload-area">
-                <input
-                  type="file"
-                  id="image-upload"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: 'none' }}
-                  disabled={isSubmitting}
-                />
-                <label htmlFor="image-upload" className={`upload-label ${isSubmitting ? 'disabled' : ''}`}>
-                  <Upload size={32} />
-                  <span>Click to upload photos</span>
-                  <small>Upload up to 10 photos (max 5MB each). Supported formats: JPEG, PNG, GIF, WebP</small>
-                </label>
-              </div>
-
-              {imagePreviews.length > 0 && (
-                <div className="image-preview-grid">
-                  {imagePreviews.map((image, index) => (
-                    <div key={index} className="image-preview">
-                      <img src={image.url} alt={`Preview ${index + 1}`} />
-                      <div className="image-info">
-                        <span className="image-name">{image.name}</span>
-                        <span className="image-size">{(image.size / 1024 / 1024).toFixed(2)} MB</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="remove-image-btn"
-                        onClick={() => removeImage(index)}
-                        disabled={isSubmitting}
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="upload-info">
-                <p>{imageFiles.length} / {MAX_FILES} images selected</p>
-              </div>
-            </div>
-          )}
-
-          <div className="form-actions">
+          <div style={styles.formActions}>
             {currentStep > 1 && (
               <button 
                 type="button" 
-                className="btn-secondary" 
+                style={{
+                  ...styles.btnSecondary,
+                  ...(isSubmitting ? styles.btnDisabled : {})
+                }}
                 onClick={prevStep}
                 disabled={isSubmitting}
               >
@@ -599,10 +554,14 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
               </button>
             )}
             
-            {currentStep < 4 ? (
+            {currentStep < 3 ? (
               <button 
                 type="button" 
-                className="btn-primary" 
+                style={{
+                  ...styles.btnPrimary,
+                  ...(isSubmitting ? styles.btnDisabled : {}),
+                  marginLeft: 'auto'
+                }}
                 onClick={nextStep}
                 disabled={isSubmitting}
               >
@@ -611,24 +570,319 @@ const AddExperienceModal = ({ onClose, onSubmit }) => {
             ) : (
               <button 
                 type="submit" 
-                className="btn-primary"
+                style={{
+                  ...styles.btnPrimary,
+                  ...(isSubmitting ? styles.btnDisabled : {}),
+                  marginLeft: 'auto'
+                }}
+                onClick={handleSubmit}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <>
-                    <Loader2 size={16} className="spinning" />
-                    Sharing Experience...
-                  </>
+                  <span style={styles.btnContent}>
+                    <Loader2 size={16} style={styles.spinner} />
+                    Creating Experience...
+                  </span>
                 ) : (
                   'Share Experience'
                 )}
               </button>
             )}
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
+};
+
+const styles = {
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+    backdropFilter: 'blur(4px)',
+  },
+  modal: {
+    background: 'white',
+    borderRadius: '16px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+    width: '100%',
+    maxWidth: '800px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    position: 'relative',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '24px 30px',
+    borderBottom: '1px solid #e9ecef',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    borderRadius: '16px 16px 0 0',
+  },
+  modalTitle: {
+    margin: 0,
+    fontSize: '1.5rem',
+    fontWeight: 600,
+  },
+  closeBtn: {
+    background: 'rgba(255, 255, 255, 0.2)',
+    border: 'none',
+    color: 'white',
+    padding: '8px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background-color 0.2s ease',
+  },
+  stepIndicator: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '24px 30px',
+    gap: '16px',
+    background: '#f8f9fa',
+    borderBottom: '1px solid #e9ecef',
+  },
+  step: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: '#dee2e6',
+    color: '#6c757d',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 600,
+    fontSize: '0.9rem',
+    transition: 'all 0.3s ease',
+  },
+  stepActive: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    transform: 'scale(1.1)',
+  },
+  stepCurrent: {
+    boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.3)',
+  },
+  errorBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 24px',
+    background: '#fee2e2',
+    borderLeft: '4px solid #dc2626',
+    color: '#991b1b',
+    fontSize: '0.9rem',
+  },
+  formContainer: {
+    padding: '30px',
+  },
+  formStep: {
+    animation: 'stepFadeIn 0.3s ease-out',
+  },
+  stepTitle: {
+    margin: '0 0 24px 0',
+    color: '#1a1a1a',
+    fontSize: '1.25rem',
+    fontWeight: 600,
+  },
+  formGroup: {
+    marginBottom: '20px',
+  },
+  label: {
+    display: 'block',
+    marginBottom: '8px',
+    fontWeight: 500,
+    color: '#374151',
+    fontSize: '0.95rem',
+  },
+  labelWithIcon: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginBottom: '8px',
+    fontWeight: 500,
+    color: '#374151',
+    fontSize: '0.95rem',
+  },
+  icon: {
+    color: '#667eea',
+  },
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px',
+  },
+  input: {
+    width: '100%',
+    padding: '12px 16px',
+    border: '2px solid #e9ecef',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease',
+    background: 'white',
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
+    outline: 'none',
+  },
+  select: {
+    width: '100%',
+    padding: '12px 16px',
+    border: '2px solid #e9ecef',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease',
+    background: 'white',
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
+    outline: 'none',
+  },
+  textarea: {
+    width: '100%',
+    padding: '12px 16px',
+    border: '2px solid #e9ecef',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease',
+    background: 'white',
+    fontFamily: 'inherit',
+    resize: 'vertical',
+    minHeight: '80px',
+    boxSizing: 'border-box',
+    outline: 'none',
+  },
+  categoriesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+    gap: '8px',
+    marginTop: '8px',
+  },
+  categoryBtn: {
+    padding: '8px 12px',
+    border: '2px solid #e9ecef',
+    background: 'white',
+    borderRadius: '20px',
+    fontSize: '0.85rem',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    textTransform: 'capitalize',
+    fontWeight: 500,
+    outline: 'none',
+  },
+  categoryBtnSelected: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    borderColor: '#667eea',
+    color: 'white',
+  },
+  itineraryDay: {
+    background: '#f8f9fa',
+    border: '1px solid #e9ecef',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '16px',
+  },
+  dayHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+  },
+  dayTitle: {
+    margin: 0,
+    color: '#374151',
+    fontSize: '1.1rem',
+    fontWeight: 600,
+  },
+  removeDayBtn: {
+    background: '#dc3545',
+    border: 'none',
+    color: 'white',
+    padding: '6px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background-color 0.2s ease',
+    outline: 'none',
+  },
+  addDayBtn: {
+    width: '100%',
+    padding: '12px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    marginTop: '16px',
+    outline: 'none',
+  },
+  formActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '32px',
+    paddingTop: '24px',
+    borderTop: '1px solid #e9ecef',
+    gap: '16px',
+  },
+  btnPrimary: {
+    padding: '12px 24px',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    border: 'none',
+    minWidth: '120px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    outline: 'none',
+  },
+  btnSecondary: {
+    padding: '12px 24px',
+    borderRadius: '8px',
+    fontSize: '0.95rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    border: '2px solid #e9ecef',
+    minWidth: '120px',
+    background: '#f8f9fa',
+    color: '#374151',
+    outline: 'none',
+  },
+  btnDisabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed',
+  },
+  btnContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  spinner: {
+    animation: 'spin 1s linear infinite',
+  },
 };
 
 export default AddExperienceModal;

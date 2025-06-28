@@ -302,3 +302,54 @@
     border-color: #000;
   }
 }
+.auth-required-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-required {
+  background-color: #6366f1;
+  border: 2px dashed #6366f1;
+}
+
+.auth-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  text-align: center;
+}
+
+.auth-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.auth-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-welcome {
+  color: #6b7280;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.login-btn {
+  background-color: white;
+  color: #667eea;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
